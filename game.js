@@ -64,10 +64,135 @@ function tick(){
  if(lives<=0){gameOver=true;msg('The biome has fallen! Press Restart.')}
  updateHud();
 }
-function draw(){const palettes={forest:['#78a850','#7eae56','#74a34d','#6a4c32','#a77b4b'],desert:['#c99a4b','#d1a85a','#c29448','#8b663b','#b5864c'],snow:['#b9d4d8','#c7e0e1','#aecbd0','#8c8777','#aaa28d']};const p=palettes[mapKey];ctx.clearRect(0,0,W,H);ctx.fillStyle=p[0];ctx.fillRect(0,0,W,H);for(let y=0;y<H;y+=32)for(let x=0;x<W;x+=32){ctx.fillStyle=((x/32+y/32)%2?p[1]:p[2]);ctx.fillRect(x,y,32,32)}ctx.lineCap='square';ctx.lineJoin='round';ctx.strokeStyle=p[3];ctx.lineWidth=58;ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);for(const q of path.slice(1))ctx.lineTo(q.x,q.y);ctx.stroke();ctx.strokeStyle=p[4];ctx.lineWidth=48;ctx.stroke();for(const r of rocks)drawRock(r);for(const t of towers){ctx.globalAlpha=.10;ctx.fillStyle=t.def.color;ctx.beginPath();ctx.arc(t.x,t.y,t.def.range,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;if(t===selectedTower){ctx.strokeStyle='#f5db69';ctx.lineWidth=4;ctx.beginPath();ctx.arc(t.x,t.y,22,0,Math.PI*2);ctx.stroke()}drawTower(t)}for(const e of enemies)drawEnemy(e);for(const b of bullets){ctx.fillStyle=b.color;ctx.fillRect(b.x-4,b.y-4,8,8)}for(const q of particles){ctx.fillStyle='#eff8d7';ctx.globalAlpha=q.life/25;ctx.fillRect(q.x-3,q.y-3,6,6);ctx.globalAlpha=1}if(gameOver){ctx.fillStyle='rgba(5,12,7,.72)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#eff8d7';ctx.font='bold 34px Courier New';ctx.textAlign='center';ctx.fillText(lives<=0?'BIOME FALLEN':'BIOME SAVED!',W/2,H/2-15);ctx.font='18px Courier New';ctx.fillText('Press Restart to play again',W/2,H/2+25)}}
+function draw(){
+  const palettes={
+    forest:['#78a850','#7eae56','#74a34d','#6a4c32','#a77b4b'],
+    desert:['#c99a4b','#d1a85a','#c29448','#8b663b','#b5864c'],
+    snow:['#b9d4d8','#c7e0e1','#aecbd0','#8c8777','#aaa28d']
+  };
+  const p=palettes[mapKey]||palettes.forest;
+
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.globalAlpha=1;
+  ctx.clearRect(0,0,W,H);
+
+  // Biome ground
+  ctx.fillStyle=p[0];
+  ctx.fillRect(0,0,W,H);
+  for(let y=0;y<H;y+=32){
+    for(let x=0;x<W;x+=32){
+      ctx.fillStyle=((x/32+y/32)%2?p[1]:p[2]);
+      ctx.fillRect(x,y,32,32);
+    }
+  }
+
+  // Path
+  ctx.lineCap='round';
+  ctx.lineJoin='round';
+  ctx.strokeStyle='#4b3525';
+  ctx.lineWidth=62;
+  ctx.beginPath();
+  ctx.moveTo(path[0].x,path[0].y);
+  for(const q of path.slice(1)) ctx.lineTo(q.x,q.y);
+  ctx.stroke();
+
+  ctx.strokeStyle='#a77b4b';
+  ctx.lineWidth=48;
+  ctx.beginPath();
+  ctx.moveTo(path[0].x,path[0].y);
+  for(const q of path.slice(1)) ctx.lineTo(q.x,q.y);
+  ctx.stroke();
+
+  // Entrance and exit arrows
+  drawPathArrow(path[0],path[1],'#55c85a','ENTER');
+  drawPathArrow(path[path.length-1],path[path.length-2],'#e55252','EXIT');
+
+  // Rocks / obstacles
+  for(const r of rocks) drawRock(r);
+
+  // Towers
+  for(const t of towers){
+    ctx.globalAlpha=.10;
+    ctx.fillStyle=t.def.color;
+    ctx.beginPath();
+    ctx.arc(t.x,t.y,t.def.range,0,Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha=1;
+
+    if(t===selectedTower){
+      ctx.strokeStyle='#f5db69';
+      ctx.lineWidth=4;
+      ctx.beginPath();
+      ctx.arc(t.x,t.y,22,0,Math.PI*2);
+      ctx.stroke();
+    }
+    drawTower(t);
+  }
+
+  // Enemies, projectiles and particles
+  for(const e of enemies) drawEnemy(e);
+  for(const b of bullets){
+    ctx.fillStyle=b.color;
+    ctx.fillRect(b.x-4,b.y-4,8,8);
+  }
+  for(const q of particles){
+    ctx.fillStyle='#eff8d7';
+    ctx.globalAlpha=q.life/25;
+    ctx.fillRect(q.x-3,q.y-3,6,6);
+    ctx.globalAlpha=1;
+  }
+
+  if(gameOver){
+    ctx.fillStyle='rgba(5,12,7,.72)';
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#eff8d7';
+    ctx.font='bold 34px Courier New';
+    ctx.textAlign='center';
+    ctx.fillText(lives<=0?'BIOME FALLEN':'BIOME SAVED!',W/2,H/2-15);
+    ctx.font='18px Courier New';
+    ctx.fillText('Press Restart to play again',W/2,H/2+25);
+  }
+}
+
+function drawPathArrow(point,next,color,label){
+  const dx=point.x-next.x;
+  const dy=point.y-next.y;
+  const len=Math.hypot(dx,dy)||1;
+  const ux=dx/len, uy=dy/len;
+  const size=18;
+  const sideX=-uy, sideY=ux;
+
+  // Put the arrow slightly inside the map so it remains visible.
+  const ax=point.x+ux*34;
+  const ay=point.y+uy*34;
+
+  ctx.save();
+  ctx.fillStyle=color;
+  ctx.strokeStyle='#182017';
+  ctx.lineWidth=3;
+
+  ctx.beginPath();
+  ctx.moveTo(ax+ux*size,ay+uy*size);
+  ctx.lineTo(ax-ux*size+sideX*11,ay-uy*size+sideY*11);
+  ctx.lineTo(ax-ux*size-sideX*11,ay-uy*size-sideY*11);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font='bold 14px Courier New';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillStyle=color;
+  ctx.strokeStyle='#182017';
+  ctx.lineWidth=4;
+  ctx.strokeText(label,ax,ay-28);
+  ctx.fillText(label,ax,ay-28);
+  ctx.restore();
+}
+
 function drawTower(t){const x=t.x,y=t.y;if(mapKey==='forest'){if(t.type==='sunflower')drawSunflower(x,y);else if(t.type==='mushroom')drawMushroom(x,y);else drawOak(x,y)}else if(mapKey==='desert'){if(t.type==='saguaro')drawSaguaro(x,y);else if(t.type==='prickly')drawPrickly(x,y);else drawCreosote(x,y)}else{if(t.type==='spruce')drawSpruce(x,y);else if(t.type==='willow')drawWillow(x,y);else drawBearberry(x,y)}if(t.level>1){ctx.fillStyle='#f5db69';ctx.font='bold 12px Courier New';ctx.textAlign='center';ctx.fillText('★'.repeat(t.level-1),x,y-30)}}
 function drawSunflower(x,y){ctx.fillStyle='#3e7d36';ctx.fillRect(x-3,y+7,6,20);ctx.fillStyle='#f4c941';for(let a=0;a<8;a++){const dx=Math.round(Math.cos(a*Math.PI/4)*10),dy=Math.round(Math.sin(a*Math.PI/4)*10);ctx.fillRect(x+dx-5,y+dy-5,10,10)}ctx.fillStyle='#6d4c28';ctx.fillRect(x-5,y-5,10,10)}function drawMushroom(x,y){ctx.fillStyle='#efe4d0';ctx.fillRect(x-6,y+3,12,18);ctx.fillStyle='#bb5cc4';ctx.fillRect(x-17,y-4,34,9);ctx.fillRect(x-12,y-10,24,7)}function drawOak(x,y){ctx.fillStyle='#674326';ctx.fillRect(x-6,y+3,12,27);ctx.fillStyle='#3d7137';ctx.fillRect(x-21,y-10,42,25);ctx.fillRect(x-14,y-20,28,15)}function drawSaguaro(x,y){ctx.fillStyle='#3f7d45';ctx.fillRect(x-5,y-20,10,45);ctx.fillRect(x-17,y-8,12,8);ctx.fillRect(x+5,y-1,12,8)}function drawPrickly(x,y){ctx.fillStyle='#4d8750';ctx.fillRect(x-16,y-4,32,18);ctx.fillRect(x-8,y-13,16,11);ctx.fillStyle='#e9a1a1';ctx.fillRect(x-10,y-9,4,4);ctx.fillRect(x+5,y+1,4,4)}function drawCreosote(x,y){ctx.fillStyle='#6c773d';ctx.fillRect(x-3,y-2,6,28);ctx.fillRect(x-20,y-2,40,5);ctx.fillRect(x-14,y-12,5,12);ctx.fillRect(x+9,y-15,5,15);ctx.fillStyle='#b6a75b';ctx.fillRect(x-13,y-18,9,7);ctx.fillRect(x+7,y-21,9,7)}function drawSpruce(x,y){ctx.fillStyle='#6b5137';ctx.fillRect(x-4,y+5,8,25);ctx.fillStyle='#3f765d';for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(x,y-24+i*10);ctx.lineTo(x-18+i*3,y+5+i*7);ctx.lineTo(x+18-i*3,y+5+i*7);ctx.fill()}}function drawWillow(x,y){ctx.fillStyle='#6c563f';ctx.fillRect(x-3,y-3,6,30);ctx.fillStyle='#9bb77d';for(let i=-2;i<=2;i++)ctx.fillRect(x+i*7-3,y-17+Math.abs(i)*3,6,20)}function drawBearberry(x,y){ctx.fillStyle='#5b744c';ctx.fillRect(x-17,y+4,34,6);ctx.fillRect(x-10,y-5,20,9);ctx.fillStyle='#b94f67';ctx.fillRect(x-12,y-11,7,7);ctx.fillRect(x+5,y-5,7,7);ctx.fillRect(x-2,y+2,7,7)}function drawRock(r){ctx.fillStyle=mapKey==='snow'?'#7f8e91':mapKey==='desert'?'#79684f':'#4f5a45';ctx.fillRect(r.x-r.r+4,r.y-r.r+8,r.r*2-8,r.r*2-8);ctx.fillStyle=mapKey==='snow'?'#aebdc0':mapKey==='desert'?'#9a815f':'#68735a';ctx.fillRect(r.x-r.r+10,r.y-r.r+3,r.r+10,r.r-4)}function drawEnemy(e){ctx.fillStyle=e.fast?'#d86b3f':'#563f2b';ctx.fillRect(e.x-9,e.y-7,18,14);ctx.fillStyle=e.fast?'#f1a15e':'#8d693e';ctx.fillRect(e.x-6,e.y-10,12,6);ctx.fillStyle='#e7f0bd';ctx.fillRect(e.x-6,e.y-3,4,4);ctx.fillRect(e.x+2,e.y-3,4,4);ctx.fillStyle='#2d2118';ctx.fillRect(e.x-12,e.y-17,24,3);ctx.fillStyle='#e36d5d';ctx.fillRect(e.x-12,e.y-17,24*Math.max(0,e.hp/e.maxHp),3)}
 function loop(){for(let i=0;i<gameSpeed;i++)tick();draw();requestAnimationFrame(loop)}
-map=MAPS.forest;path=map.path;rocks=map.rocks;towerDefs=map.towers;gameSpeed=1;loop();
+map=MAPS.forest;path=map.path;rocks=map.rocks;towerDefs=map.towers;gameSpeed=1;draw();loop();
 
 });

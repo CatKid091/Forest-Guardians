@@ -1,27 +1,22 @@
-# 🌿 Nature Guardians
+# Nature Guardians
 
-A pixel-art tower defense game with three selectable biomes.
+A pixelated nature-themed tower defense game for GitHub Pages.
 
-## Important GitHub Pages setup
-Upload **all four files from this ZIP together** to the same folder:
-- `index.html`
-- `style.css`
-- `game.js`
-- `README.md`
+## Uploading
+Upload these four files to the same folder in your GitHub Pages repository:
 
-Make sure the old `index.html` and `game.js` are replaced, not left alongside renamed copies.
+- index.html
+- style.css
+- game.js
+- README.md
 
-## Maps
-- 🌲 Verdant Forest — Oak Guardian, Sunflower, Mushroom
-- 🏜️ Sunbaked Desert — Saguaro, Prickly Pear, Creosote Bush
-- ❄️ Frozen Tundra — Spruce, Arctic Willow, Bearberry
-
-## Features
-- Main map-selection screen with hover/touch details
-- Tower upgrades and removal/refunds
-- Rocks that block placement
-- Fast enemy type with lower health
-- 1x / 2x game-speed toggle
-- No external libraries or server required
-
-If the game encounters a JavaScript error, it will now show the error message in the status area instead of silently failing.
+This version includes:
+- Forest, Desert, and Frozen Tundra maps
+- Visible winding paths and rock obstacles
+- Green ENTER arrow at the pest entrance
+- Red EXIT arrow at the pest exit
+- Three native plant towers per biome
+- Tower upgrades and removal
+- Fast pests
+- 1x / 2x speed
+- Wave system and score
