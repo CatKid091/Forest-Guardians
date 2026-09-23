@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forest Guardians — Pixel Tower Defense</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-wrap">
+    <header>
+      <div>
+        <h1>🌿 Forest Guardians</h1>
+        <p>Defend the forest from the little forest pests!</p>
+      </div>
+      <button id="restart">Restart</button>
+    </header>
+
+    <section class="hud">
+      <span>💧 Mana: <b id="mana">120</b></span>
+      <span>❤️ Lives: <b id="lives">20</b></span>
+      <span>🌊 Wave: <b id="wave">1</b></span>
+      <span>⭐ Score: <b id="score">0</b></span>
+      <span id="status">Build your defenses!</span>
+    </section>
+
+    <div class="game-area">
+      <canvas id="game" width="960" height="600"></canvas>
+      <aside class="panel">
+        <h2>Build</h2>
+        <button class="tower selected" data-type="sunflower">
+          🌻 Sunflower<br><small>Cost 40 · Fast</small>
+        </button>
+        <button class="tower" data-type="mushroom">
+          🍄 Mushroom<br><small>Cost 65 · Splash</small>
+        </button>
+        <button class="tower" data-type="oak">
+          🌳 Oak Guardian<br><small>Cost 100 · Strong</small>
+        </button>
+        <p class="hint">Click a tower, then click a grassy spot. Towers cannot be placed on the path.</p>
+        <button id="startWave" class="start">Start Wave</button>
+      </aside>
+    </div>
+
+    <footer>Tip: Survive 8 waves. You can build while a wave is running.</footer>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
