@@ -13,11 +13,15 @@ const towerDefs = {
   oak:{name:"🌳 Oak Guardian",cost:100,range:145,damage:28,fireRate:78,color:"#79552f",bullet:"#b5e36a"}
 };
 
-let mana, lives, wave, score, towers, enemies, bullets, particles, waveActive, spawnLeft, spawnTimer, selectedType, selectedTower, gameOver;
+let mana, lives, wave, score, towers, enemies, bullets, particles, waveActive, spawnLeft, spawnTimer, selectedType, selectedTower, gameOver, gameSpeed;
+const rocks = [
+  {x:95,y:355,r:27}, {x:285,y:515,r:30}, {x:535,y:500,r:26}, {x:790,y:180,r:29}
+];
 
 function reset(){
   mana=120; lives=20; wave=1; score=0; towers=[]; enemies=[]; bullets=[]; particles=[];
-  waveActive=false; spawnLeft=0; spawnTimer=0; selectedType="sunflower"; selectedTower=null; gameOver=false;
+  waveActive=false; spawnLeft=0; spawnTimer=0; selectedType="sunflower"; selectedTower=null; gameOver=false; gameSpeed=1;
+  document.getElementById("speedButton").textContent="▶ 1x"; document.getElementById("speedButton").classList.remove("active");
   showBuildMenu(); selectButtons(); updateHud();
 }
 function selectButtons(){
@@ -29,6 +33,7 @@ document.getElementById("startWave").onclick=startWave;
 document.getElementById("closeTower").onclick=()=>{selectedTower=null;showBuildMenu();};
 document.getElementById("upgradeTower").onclick=upgradeSelected;
 document.getElementById("sellTower").onclick=sellSelected;
+document.getElementById("speedButton").onclick=()=>{gameSpeed=gameSpeed===1?2:1;const b=document.getElementById("speedButton");b.textContent=gameSpeed===2?"▶▶ 2x":"▶ 1x";b.classList.toggle("active",gameSpeed===2);msg(`Game speed: ${gameSpeed}x`);};
 
 function startWave(){
   if(gameOver || waveActive) return;
@@ -56,6 +61,7 @@ function pointOnPath(x,y){
   return false;
 }
 function towerAt(x,y){return towers.find(t=>Math.hypot(x-t.x,y-t.y)<28);}
+function rockAt(x,y){return rocks.some(r=>Math.hypot(x-r.x,y-r.y)<r.r+24);}
 
 canvas.addEventListener("click",e=>{
   if(gameOver)return;
@@ -71,8 +77,8 @@ canvas.addEventListener("click",e=>{
   if(selectedTower){ selectedTower=null; showBuildMenu(); }
   const d=towerDefs[selectedType];
   if(mana<d.cost){msg("Not enough mana!");return;}
-  if(pointOnPath(x,y)||towers.some(t=>Math.hypot(x-t.x,y-t.y)<34)){msg("That spot is occupied or on the path!");return;}
-  towers.push({x,y,type:selectedType,def:d,cool:0,level:1,invested:d.cost});
+  if(pointOnPath(x,y)||rockAt(x,y)||towers.some(t=>Math.hypot(x-t.x,y-t.y)<34)){msg(rockAt(x,y)?"You cannot build on a rock!":"That spot is occupied or on the path!");return;}
+  towers.push({x,y,type:selectedType,def:{...d},cool:0,level:1,invested:d.cost});
   mana-=d.cost; updateHud();
 });
 
@@ -122,8 +128,10 @@ function updateTowerMenu(){
 }
 
 function spawnEnemy(){
-  const hp=28+wave*12, speed=0.75+wave*0.045;
-  enemies.push({x:path[0].x,y:path[0].y,seg:0,t:0,hp,maxHp:hp,speed,r:11,reward:8+wave});
+  const fast=Math.random()<Math.min(0.20+wave*0.02,0.35);
+  const hp=fast?Math.max(16,Math.round((28+wave*12)*0.52)):28+wave*12;
+  const speed=fast?1.45+wave*0.055:0.75+wave*0.045;
+  enemies.push({x:path[0].x,y:path[0].y,seg:0,t:0,hp,maxHp:hp,speed,r:fast?9:11,reward:(fast?11:8)+wave,fast});
 }
 function moveEnemy(e){
   let remaining=e.speed;
@@ -182,6 +190,7 @@ function draw(){
     if(t.type==="oak")drawOak(t.x,t.y);
     if(t.level>1){ctx.fillStyle="#f5db69";ctx.font="bold 12px Courier New";ctx.textAlign="center";ctx.fillText("★".repeat(t.level-1),t.x,t.y-28);}
   }
+  for(const r of rocks) drawRock(r);
   for(const e of enemies)drawEnemy(e);
   for(const b of bullets){ctx.fillStyle=b.color;ctx.fillRect(b.x-4,b.y-4,8,8);}
   for(const p of particles){ctx.fillStyle="#eaf7b0";ctx.globalAlpha=p.life/25;ctx.fillRect(p.x-3,p.y-3,6,6);ctx.globalAlpha=1;}
@@ -190,6 +199,13 @@ function draw(){
 function drawSunflower(x,y){ctx.fillStyle="#3e7d36";ctx.fillRect(x-3,y+7,6,20);ctx.fillStyle="#4f943d";ctx.fillRect(x-13,y+12,10,6);ctx.fillRect(x+3,y+17,10,6);ctx.fillStyle="#f4c941";for(let a=0;a<8;a++){const dx=Math.round(Math.cos(a*Math.PI/4)*10),dy=Math.round(Math.sin(a*Math.PI/4)*10);ctx.fillRect(x+dx-5,y+dy-5,10,10);}ctx.fillStyle="#6d4c28";ctx.fillRect(x-5,y-5,10,10);}
 function drawMushroom(x,y){ctx.fillStyle="#efe4d0";ctx.fillRect(x-6,y+3,12,18);ctx.fillStyle="#bb5cc4";ctx.fillRect(x-17,y-4,34,9);ctx.fillRect(x-12,y-10,24,7);ctx.fillStyle="#f4c6ed";ctx.fillRect(x-8,y-7,5,4);ctx.fillRect(x+5,y-4,5,4);}
 function drawOak(x,y){ctx.fillStyle="#674326";ctx.fillRect(x-6,y+3,12,27);ctx.fillStyle="#3d7137";ctx.fillRect(x-21,y-10,42,25);ctx.fillRect(x-14,y-20,28,15);ctx.fillStyle="#548b40";ctx.fillRect(x-28,y-2,14,14);ctx.fillRect(x+14,y-4,14,14);}
-function drawEnemy(e){ctx.fillStyle="#563f2b";ctx.fillRect(e.x-9,e.y-7,18,14);ctx.fillStyle="#8d693e";ctx.fillRect(e.x-6,e.y-10,12,6);ctx.fillStyle="#e7f0bd";ctx.fillRect(e.x-6,e.y-3,4,4);ctx.fillRect(e.x+2,e.y-3,4,4);ctx.fillStyle="#3c241b";ctx.fillRect(e.x-8,e.y+7,5,5);ctx.fillRect(e.x+3,e.y+7,5,5);ctx.fillStyle="#2d2118";ctx.fillRect(e.x-12,e.y-17,24,3);ctx.fillStyle="#e36d5d";ctx.fillRect(e.x-12,e.y-17,24*Math.max(0,e.hp/e.maxHp),3);}
-function loop(){update();draw();requestAnimationFrame(loop);}
+function drawRock(r){ctx.fillStyle="#4f5a45";ctx.fillRect(r.x-r.r+4,r.y-r.r+8,r.r*2-8,r.r*2-8);ctx.fillStyle="#68735a";ctx.fillRect(r.x-r.r+10,r.y-r.r+3,r.r+10,r.r-4);ctx.fillStyle="#879174";ctx.fillRect(r.x-r.r+14,r.y-r.r+7,9,5);ctx.fillStyle="#3b4435";ctx.fillRect(r.x-r.r+9,r.y+r.r-4,18,5);}
+function drawEnemy(e){
+  if(e.fast){
+    ctx.fillStyle="#b36b35";ctx.fillRect(e.x-8,e.y-6,16,12);ctx.fillStyle="#e39a4e";ctx.fillRect(e.x-5,e.y-10,10,5);ctx.fillStyle="#f3e7ad";ctx.fillRect(e.x-5,e.y-3,3,3);ctx.fillRect(e.x+2,e.y-3,3,3);ctx.fillStyle="#59301d";ctx.fillRect(e.x-7,e.y+6,4,6);ctx.fillRect(e.x+3,e.y+6,4,6);ctx.fillStyle="#d95b4f";ctx.fillRect(e.x-11,e.y-16,22,3);ctx.fillStyle="#ef7b57";ctx.fillRect(e.x-11,e.y-16,22*Math.max(0,e.hp/e.maxHp),3);
+  } else {
+    ctx.fillStyle="#563f2b";ctx.fillRect(e.x-9,e.y-7,18,14);ctx.fillStyle="#8d693e";ctx.fillRect(e.x-6,e.y-10,12,6);ctx.fillStyle="#e7f0bd";ctx.fillRect(e.x-6,e.y-3,4,4);ctx.fillRect(e.x+2,e.y-3,4,4);ctx.fillStyle="#3c241b";ctx.fillRect(e.x-8,e.y+7,5,5);ctx.fillRect(e.x+3,e.y+7,5,5);ctx.fillStyle="#2d2118";ctx.fillRect(e.x-12,e.y-17,24,3);ctx.fillStyle="#e36d5d";ctx.fillRect(e.x-12,e.y-17,24*Math.max(0,e.hp/e.maxHp),3);
+  }
+}
+function loop(){for(let i=0;i<gameSpeed;i++)update();draw();requestAnimationFrame(loop);}
 reset();loop();

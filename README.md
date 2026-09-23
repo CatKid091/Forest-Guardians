@@ -30,3 +30,9 @@ No server, framework, images, or external libraries are required.
 - 🍄 Mushroom: slower but has splash damage.
 - 🌳 Oak Guardian: expensive and powerful.
 - Survive 8 waves to save the forest.
+
+## New features
+- Four permanent rocks block tower placement.
+- Fast pests have lower health but move much faster.
+- Bottom-left speed button toggles between 1x and 2x.
+- Click towers to upgrade or remove them.
