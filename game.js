@@ -33,7 +33,16 @@ document.getElementById("startWave").onclick=startWave;
 document.getElementById("closeTower").onclick=()=>{selectedTower=null;showBuildMenu();};
 document.getElementById("upgradeTower").onclick=upgradeSelected;
 document.getElementById("sellTower").onclick=sellSelected;
-document.getElementById("speedButton").onclick=()=>{gameSpeed=gameSpeed===1?2:1;const b=document.getElementById("speedButton");b.textContent=gameSpeed===2?"▶▶ 2x":"▶ 1x";b.classList.toggle("active",gameSpeed===2);msg(`Game speed: ${gameSpeed}x`);};
+const speedButton = document.getElementById("speedButton");
+function toggleGameSpeed(){
+  gameSpeed = gameSpeed === 1 ? 2 : 1;
+  speedButton.textContent = gameSpeed === 2 ? "▶▶ 2x" : "▶ 1x";
+  speedButton.classList.toggle("active", gameSpeed === 2);
+  speedButton.setAttribute("aria-pressed", gameSpeed === 2 ? "true" : "false");
+  msg(`Game speed: ${gameSpeed}x`);
+}
+speedButton.addEventListener("click", (event)=>{ event.preventDefault(); event.stopPropagation(); toggleGameSpeed(); });
+speedButton.addEventListener("pointerdown", (event)=>{ event.stopPropagation(); });
 
 function startWave(){
   if(gameOver || waveActive) return;
@@ -207,5 +216,17 @@ function drawEnemy(e){
     ctx.fillStyle="#563f2b";ctx.fillRect(e.x-9,e.y-7,18,14);ctx.fillStyle="#8d693e";ctx.fillRect(e.x-6,e.y-10,12,6);ctx.fillStyle="#e7f0bd";ctx.fillRect(e.x-6,e.y-3,4,4);ctx.fillRect(e.x+2,e.y-3,4,4);ctx.fillStyle="#3c241b";ctx.fillRect(e.x-8,e.y+7,5,5);ctx.fillRect(e.x+3,e.y+7,5,5);ctx.fillStyle="#2d2118";ctx.fillRect(e.x-12,e.y-17,24,3);ctx.fillStyle="#e36d5d";ctx.fillRect(e.x-12,e.y-17,24*Math.max(0,e.hp/e.maxHp),3);
   }
 }
-function loop(){for(let i=0;i<gameSpeed;i++)update();draw();requestAnimationFrame(loop);}
-reset();loop();
+let lastFrameTime = performance.now();
+function loop(now){
+  const elapsed = Math.min(100, now - lastFrameTime);
+  lastFrameTime = now;
+  // Run the simulation using a fixed number of steps. At 2x, two game ticks
+  // happen for every rendered frame, making movement, attacks, and spawning faster.
+  const steps = gameSpeed === 2 ? 2 : 1;
+  for(let i=0;i<steps;i++) update();
+  draw();
+  requestAnimationFrame(loop);
+}
+speedButton.setAttribute("aria-pressed", "false");
+reset();
+requestAnimationFrame(loop);
