@@ -32,6 +32,17 @@ canvas {
   box-shadow:5px 5px #0b140d;
 }
 .panel h2 { margin:0 0 10px; color:#b7e779; }
+.hidden { display:none; }
+.menu-title { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.menu-title h2 { margin:0; }
+.close { padding:3px 9px; font-size:20px; line-height:1; }
+.level { color:#f5db69; margin:6px 0 12px; }
+.stats { background:#172d1d; border:2px solid #41613d; padding:8px; line-height:1.7; margin-bottom:10px; font-size:12px; }
+.upgrade, .sell { width:100%; margin-bottom:9px; }
+.upgrade { background:#806c2c; border-color:#d2b957; }
+.sell { background:#63382e; border-color:#a86a59; }
+.upgrade:disabled { opacity:.5; cursor:not-allowed; }
+.selected-tower { outline:3px solid #f5db69; }
 .tower { width:100%; margin-bottom:9px; text-align:left; }
 .tower.selected { outline:3px solid #f5db69; }
 .tower small { color:#bdd0ad; }

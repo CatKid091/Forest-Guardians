@@ -2,6 +2,13 @@
 
 A small, self-contained pixel-art tower defense game made with plain HTML, CSS, and JavaScript.
 
+## New tower controls
+- Click an existing tower to open its panel on the right.
+- Upgrade towers up to Level 3.
+- Upgrades increase damage, range, and attack speed; mushroom upgrades also increase splash radius.
+- Remove a tower to receive a 70% mana refund based on the total mana invested in it.
+- Click the × button or an empty area to return to the Build menu.
+
 ## Run locally
 Open `index.html` in a browser.
 
@@ -18,6 +25,7 @@ No server, framework, images, or external libraries are required.
 ## Gameplay
 - Start each wave with **Start Wave**.
 - Select a plant defender, then click a grassy area.
+- Click placed towers to upgrade or remove them.
 - 🌻 Sunflower: cheap and fast.
 - 🍄 Mushroom: slower but has splash damage.
 - 🌳 Oak Guardian: expensive and powerful.
