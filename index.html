@@ -1,56 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Forest Guardians — Pixel Tower Defense</title>
-  <link rel="stylesheet" href="style.css">
-</head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Nature Guardians</title><link rel="stylesheet" href="style.css"></head>
 <body>
-  <main class="game-wrap">
-    <header>
-      <div>
-        <h1>🌿 Forest Guardians</h1>
-        <p>Defend the forest from the little forest pests!</p>
-      </div>
-      <button id="restart">Restart</button>
-    </header>
-
-    <section class="hud">
-      <span>💧 Mana: <b id="mana">120</b></span>
-      <span>❤️ Lives: <b id="lives">20</b></span>
-      <span>🌊 Wave: <b id="wave">1</b></span>
-      <span>⭐ Score: <b id="score">0</b></span>
-      <span id="status">Build your defenses!</span>
-    </section>
-
-    <div class="game-area">
-      <div class="canvas-wrap">
-        <canvas id="game" width="960" height="600"></canvas>
-        <button id="speedButton" class="speed-button" type="button">▶ 1x</button>
-      </div>
-      <aside class="panel" id="panel">
-        <div id="buildMenu">
-          <h2>Build</h2>
-          <button class="tower selected" data-type="sunflower">🌻 Sunflower<br><small>Cost 40 · Fast</small></button>
-          <button class="tower" data-type="mushroom">🍄 Mushroom<br><small>Cost 65 · Splash</small></button>
-          <button class="tower" data-type="oak">🌳 Oak Guardian<br><small>Cost 100 · Strong</small></button>
-          <p class="hint">Select a plant, then click a grassy spot. Click an existing tower to open its upgrade menu.</p>
-          <button id="startWave" class="start">Start Wave</button>
-        </div>
-        <div id="towerMenu" class="hidden">
-          <div class="menu-title"><h2 id="towerName">Tower</h2><button id="closeTower" class="close">×</button></div>
-          <div id="towerLevel" class="level"></div>
-          <div id="towerStats" class="stats"></div>
-          <button id="upgradeTower" class="upgrade">Upgrade</button>
-          <button id="sellTower" class="sell">Remove Tower</button>
-          <p class="hint">Upgrades make this defender stronger. Removing it refunds 70% of the mana invested.</p>
-        </div>
-      </aside>
+<main class="game-wrap">
+  <section id="mainMenu" class="main-menu">
+    <h1>🌿 Nature Guardians</h1>
+    <p class="subtitle">Choose a biome and protect it from invading pests!</p>
+    <div class="map-grid">
+      <article class="map-card forest" data-map="forest" tabindex="0">
+        <div class="map-art">🌲 🌻 🌳<br>🍄 🪨 🌿</div>
+        <h2>🌲 Verdant Forest</h2><div class="difficulty">Difficulty: ★★☆☆☆</div>
+        <div class="map-info"><p>Dense woodland with a winding trail and plenty of room for plant guardians.</p><p><b>Towers:</b> Oak, Sunflower, Mushroom</p><button class="play-map" data-map="forest">Play Forest</button></div>
+      </article>
+      <article class="map-card desert" data-map="desert" tabindex="0">
+        <div class="map-art">🌵 ☀️ 🏜️<br>🌵 🪨 🌵</div>
+        <h2>🏜️ Sunbaked Desert</h2><div class="difficulty">Difficulty: ★★★☆☆</div>
+        <div class="map-info"><p>Hot sands and tight bends make this a faster, tougher battlefield.</p><p><b>Towers:</b> Saguaro, Prickly Pear, Creosote</p><button class="play-map" data-map="desert">Play Desert</button></div>
+      </article>
+      <article class="map-card snow" data-map="snow" tabindex="0">
+        <div class="map-art">❄️ 🌲 ❄️<br>🌲 🪨 🫐</div>
+        <h2>❄️ Frozen Tundra</h2><div class="difficulty">Difficulty: ★★★★☆</div>
+        <div class="map-info"><p>Cold terrain with fewer open building spots and quick snow pests.</p><p><b>Towers:</b> Spruce, Arctic Willow, Bearberry</p><button class="play-map" data-map="snow">Play Tundra</button></div>
+      </article>
     </div>
+    <p class="menu-tip">Hover over a map for details, then click <b>Play</b>.</p>
+  </section>
 
-    <footer>Tip: Survive 8 waves. You can build while a wave is running.</footer>
-  </main>
-  <script src="game.js"></script>
-</body>
-</html>
+  <section id="gameScreen" class="game-screen hidden">
+    <header><div><h1 id="gameTitle">🌲 Verdant Forest</h1><p id="gameSubtitle">Defend the biome!</p></div><button id="backMenu">← Maps</button><button id="restart">Restart</button></header>
+    <section class="hud"><span>💧 Mana: <b id="mana">120</b></span><span>❤️ Lives: <b id="lives">20</b></span><span>🌊 Wave: <b id="wave">1</b></span><span>⭐ Score: <b id="score">0</b></span><span id="status">Build your defenses!</span></section>
+    <div class="game-area"><div class="canvas-wrap"><canvas id="game" width="960" height="600"></canvas><button id="speedButton" class="speed-button" type="button">▶ 1x</button></div>
+      <aside class="panel"><div id="buildMenu"><h2>Build</h2><div id="towerButtons"></div><p class="hint">Select a plant, then click a clear area. Click a tower to upgrade or remove it.</p><button id="startWave" class="start">Start Wave</button></div>
+      <div id="towerMenu" class="hidden"><div class="menu-title"><h2 id="towerName">Tower</h2><button id="closeTower" class="close">×</button></div><div id="towerLevel" class="level"></div><div id="towerStats" class="stats"></div><button id="upgradeTower" class="upgrade">Upgrade</button><button id="sellTower" class="sell">Remove Tower</button><p class="hint">Removing a tower refunds 70% of its invested mana.</p></div></aside>
+    </div><footer>Survive 8 waves. Each biome has its own native plant guardians.</footer>
+  </section>
+</main><script src="game.js"></script></body></html>

@@ -1,38 +1,21 @@
-# 🌿 Forest Guardians — Pixel Tower Defense
+# 🌿 Nature Guardians
 
-A small, self-contained pixel-art tower defense game made with plain HTML, CSS, and JavaScript.
+A pixel-art tower defense game with three selectable biomes.
 
-## New tower controls
-- Click an existing tower to open its panel on the right.
-- Upgrade towers up to Level 3.
-- Upgrades increase damage, range, and attack speed; mushroom upgrades also increase splash radius.
-- Remove a tower to receive a 70% mana refund based on the total mana invested in it.
-- Click the × button or an empty area to return to the Build menu.
+## Maps
+- 🌲 Verdant Forest — Oak Guardian, Sunflower, Mushroom
+- 🏜️ Sunbaked Desert — Saguaro, Prickly Pear, Creosote Bush
+- ❄️ Frozen Tundra — Spruce, Arctic Willow, Bearberry
 
-## Run locally
-Open `index.html` in a browser.
+Each map has its own path, rocks, visual style, difficulty flavor, and three native plant-inspired towers.
 
-## Put it on GitHub Pages
-1. Create a new GitHub repository.
-2. Upload `index.html`, `style.css`, and `game.js`.
-3. Open **Settings → Pages**.
-4. Under **Build and deployment**, choose **Deploy from a branch**.
-5. Choose the `main` branch and `/ (root)`.
-6. Save. GitHub will give you a public game URL.
+## Features
+- Main map-selection screen with hover/touch details
+- Tower upgrades and removal/refunds
+- Four rocks per map that block placement
+- Fast enemy type with lower health
+- 1x / 2x game-speed toggle
+- GitHub Pages compatible; no external libraries or server required
 
-No server, framework, images, or external libraries are required.
-
-## Gameplay
-- Start each wave with **Start Wave**.
-- Select a plant defender, then click a grassy area.
-- Click placed towers to upgrade or remove them.
-- 🌻 Sunflower: cheap and fast.
-- 🍄 Mushroom: slower but has splash damage.
-- 🌳 Oak Guardian: expensive and powerful.
-- Survive 8 waves to save the forest.
-
-## New features
-- Four permanent rocks block tower placement.
-- Fast pests have lower health but move much faster.
-- Bottom-left speed button toggles between 1x and 2x.
-- Click towers to upgrade or remove them.
+## GitHub Pages
+Upload `index.html`, `style.css`, `game.js`, and `README.md` to the root of a GitHub repository, then enable **Settings → Pages → Deploy from a branch → main → / (root)**.
