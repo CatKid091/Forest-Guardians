@@ -11,7 +11,7 @@ function buildTowerButtons(){const box=$('towerButtons');box.innerHTML="";Object
 function reset(){mana=120;lives=20;wave=1;score=0;towers=[];enemies=[];bullets=[];particles=[];waveActive=false;spawnLeft=0;spawnTimer=0;selectedTower=null;selectedType=Object.keys(towerDefs)[0];gameOver=false;gameSpeed=1;$('speedButton').textContent='▶ 1x';$('speedButton').classList.remove('active');showBuildMenu();selectButtons();updateHud();}
 function selectButtons(){$$('.tower').forEach(b=>b.classList.toggle('selected',b.dataset.type===selectedType));}function $$(s){return document.querySelectorAll(s)}
 $('backMenu').onclick=()=>{$('gameScreen').classList.add('hidden');$('mainMenu').classList.remove('hidden');};$('restart').onclick=reset;$('startWave').onclick=startWave;$('closeTower').onclick=()=>{selectedTower=null;showBuildMenu()};$('upgradeTower').onclick=upgradeSelected;$('sellTower').onclick=sellSelected;
-document.querySelectorAll('.play-map').forEach(b=>b.onclick=e=>{e.stopPropagation();chooseMap(b.dataset.map)});document.querySelectorAll('.map-card').forEach(c=>c.onclick=e=>{if(e.target.classList.contains('play-map'))return;chooseMap(c.dataset.map)});
+document.querySelectorAll('.play-map').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();chooseMap(e.currentTarget.dataset.map)}));document.querySelectorAll('.map-card').forEach(c=>c.addEventListener('click',e=>{if(e.target.closest('.play-map'))return;chooseMap(c.dataset.map)}));
 $('speedButton').onclick=e=>{e.preventDefault();e.stopPropagation();gameSpeed=gameSpeed===1?2:1;$('speedButton').textContent=gameSpeed===2?'▶▶ 2x':'▶ 1x';$('speedButton').classList.toggle('active',gameSpeed===2);msg(`Game speed: ${gameSpeed}x`)};
 function startWave(){if(gameOver||waveActive)return;selectedTower=null;showBuildMenu();waveActive=true;spawnLeft=7+wave*3;spawnTimer=0;msg(`Wave ${wave} incoming!`)}function msg(s){$('status').textContent=s}function updateHud(){$('mana').textContent=Math.floor(mana);$('lives').textContent=lives;$('wave').textContent=wave;$('score').textContent=score;if(selectedTower)updateTowerMenu()}
 function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}function pointOnPath(x,y){for(let i=0;i<path.length-1;i++){const a=path[i],b=path[i+1],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy),t=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/(len*len)));if(Math.hypot(x-(a.x+t*dx),y-(a.y+t*dy))<30)return true}return false}function towerAt(x,y){return towers.find(t=>dist(t,{x,y})<28)}function rockAt(x,y){return rocks.some(r=>Math.hypot(x-r.x,y-r.y)<r.r+24)}
@@ -20,9 +20,46 @@ function showBuildMenu(){$('buildMenu').classList.remove('hidden');$('towerMenu'
 function spawnEnemy(){const fast=Math.random()<Math.min(.2+wave*.02,.38),base=28+wave*12;const hp=fast?Math.max(15,Math.round(base*.5)):base,speed=fast?1.45+wave*.055:.75+wave*.045;enemies.push({x:path[0].x,y:path[0].y,seg:0,t:0,hp,maxHp:hp,speed,r:fast?9:11,reward:(fast?11:8)+wave,fast})}
 function moveEnemy(e){let rem=e.speed;while(rem>0&&e.seg<path.length-1){const a=path[e.seg],b=path[e.seg+1],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);e.t+=rem/len;if(e.t>=1){e.t-=1;e.seg++}else rem=0;if(e.seg>=path.length-1){lives--;e.hp=-999;msg('A pest got through!');return}}if(e.seg<path.length-1){const a=path[e.seg],b=path[e.seg+1];e.x=a.x+(b.x-a.x)*e.t;e.y=a.y+(b.y-a.y)*e.t}}
 function nearestEnemy(t){let best=null,bd=t.def.range;for(const e of enemies){const d=dist(t,e);if(e.hp>0&&d<bd){best=e;bd=d}}return best}function shoot(t,e){bullets.push({x:t.x,y:t.y,target:e,speed:5.5,damage:t.def.damage,splash:t.def.splash||0,color:t.def.bullet||'#fff'})}function explode(x,y,rad,dmg){for(const e of enemies)if(e.hp>0&&dist({x,y},e)<rad)e.hp-=dmg;for(let i=0;i<8;i++)particles.push({x,y,dx:(Math.random()-.5)*2,dy:(Math.random()-.5)*2,life:18})}
-function tick(){if(gameOver)return;if(waveActive){if(spawnLeft>0){if(spawnTimer--<=0){spawnEnemy();spawnLeft--;spawnTimer=Math.max(16,55-wave*2)}}else if(enemies.length===0){waveActive=false;mana+=35+wave*8;if(wave>=8){gameOver=true;msg('You protected the biome! 🌿')}else{wave++;msg('Wave cleared! Build more defenses.')}}}for(const t of towers){if(t.cool>0)t.cool--;if(t.cool<=0){const e=nearestEnemy(t);if(e){shoot(t,e);t.cool=t.def.fireRate}}}for(const b of bullets){if(!b.target||b.target.hp<=0){b.dead=true;continue}const dx=b.target.x-b.x,dy=b.target.y-b.y,d=Math.hypot(dx,dy);if(d<b.speed+3){b.dead=true;if(b.splash)explode(b.target.x,b.target.y,b.splash,b.damage);else b.target.hp-=b.damage;particles.push({x:b.target.x,y:b.target.y,dx:0,dy:0,life:12})}else{b.x+=dx/d*b.speed;b.y+=dy/d*b.speed}}bullets=bullets.filter(b=>!b.dead);for(const e of enemies)if(e.hp>0)moveEnemy(e);for(const e of enemies)if(e.hp<=0&&!e.counted){e.counted=true;if(e.hp>-900){score+=10;mana+=e.reward;particles.push({x:e.x,y:e.y,dx:0,dy:-1,life:25)}}}enemies=enemies.filter(e=>e.hp>0);for(const p of particles){p.x+=p.dx;p.y+=p.dy;p.life--}particles=particles.filter(p=>p.life>0);if(lives<=0){gameOver=true;msg('The biome has fallen! Press Restart.')}updateHud()}
+function tick(){
+ if(gameOver)return;
+ if(waveActive){
+  if(spawnLeft>0){
+   if(spawnTimer--<=0){spawnEnemy();spawnLeft--;spawnTimer=Math.max(16,55-wave*2)}
+  }else if(enemies.length===0){
+   waveActive=false; mana+=35+wave*8;
+   if(wave>=8){gameOver=true;msg('You protected the biome! 🌿')}
+   else{wave++;msg('Wave cleared! Build more defenses.')}
+  }
+ }
+ for(const t of towers){
+  if(t.cool>0)t.cool--;
+  if(t.cool<=0){const e=nearestEnemy(t);if(e){shoot(t,e);t.cool=t.def.fireRate}}
+ }
+ for(const b of bullets){
+  if(!b.target||b.target.hp<=0){b.dead=true;continue}
+  const dx=b.target.x-b.x,dy=b.target.y-b.y,d=Math.hypot(dx,dy);
+  if(d<b.speed+3){
+   b.dead=true;
+   if(b.splash)explode(b.target.x,b.target.y,b.splash,b.damage);else b.target.hp-=b.damage;
+   particles.push({x:b.target.x,y:b.target.y,dx:0,dy:0,life:12});
+  }else{b.x+=dx/d*b.speed;b.y+=dy/d*b.speed}
+ }
+ bullets=bullets.filter(b=>!b.dead);
+ for(const e of enemies)if(e.hp>0)moveEnemy(e);
+ for(const e of enemies){
+  if(e.hp<=0&&!e.counted){
+   e.counted=true;
+   if(e.hp>-900){score+=10;mana+=e.reward;particles.push({x:e.x,y:e.y,dx:0,dy:-1,life:25})}
+  }
+ }
+ enemies=enemies.filter(e=>e.hp>0);
+ for(const p of particles){p.x+=p.dx;p.y+=p.dy;p.life--}
+ particles=particles.filter(p=>p.life>0);
+ if(lives<=0){gameOver=true;msg('The biome has fallen! Press Restart.')}
+ updateHud();
+}
 function draw(){const palettes={forest:['#78a850','#7eae56','#74a34d','#6a4c32','#a77b4b'],desert:['#c99a4b','#d1a85a','#c29448','#8b663b','#b5864c'],snow:['#b9d4d8','#c7e0e1','#aecbd0','#8c8777','#aaa28d']};const p=palettes[mapKey];ctx.clearRect(0,0,W,H);ctx.fillStyle=p[0];ctx.fillRect(0,0,W,H);for(let y=0;y<H;y+=32)for(let x=0;x<W;x+=32){ctx.fillStyle=((x/32+y/32)%2?p[1]:p[2]);ctx.fillRect(x,y,32,32)}ctx.lineCap='square';ctx.lineJoin='round';ctx.strokeStyle=p[3];ctx.lineWidth=58;ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);for(const q of path.slice(1))ctx.lineTo(q.x,q.y);ctx.stroke();ctx.strokeStyle=p[4];ctx.lineWidth=48;ctx.stroke();for(const r of rocks)drawRock(r);for(const t of towers){ctx.globalAlpha=.10;ctx.fillStyle=t.def.color;ctx.beginPath();ctx.arc(t.x,t.y,t.def.range,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;if(t===selectedTower){ctx.strokeStyle='#f5db69';ctx.lineWidth=4;ctx.beginPath();ctx.arc(t.x,t.y,22,0,Math.PI*2);ctx.stroke()}drawTower(t)}for(const e of enemies)drawEnemy(e);for(const b of bullets){ctx.fillStyle=b.color;ctx.fillRect(b.x-4,b.y-4,8,8)}for(const q of particles){ctx.fillStyle='#eff8d7';ctx.globalAlpha=q.life/25;ctx.fillRect(q.x-3,q.y-3,6,6);ctx.globalAlpha=1}if(gameOver){ctx.fillStyle='rgba(5,12,7,.72)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#eff8d7';ctx.font='bold 34px Courier New';ctx.textAlign='center';ctx.fillText(lives<=0?'BIOME FALLEN':'BIOME SAVED!',W/2,H/2-15);ctx.font='18px Courier New';ctx.fillText('Press Restart to play again',W/2,H/2+25)}}
 function drawTower(t){const x=t.x,y=t.y;if(mapKey==='forest'){if(t.type==='sunflower')drawSunflower(x,y);else if(t.type==='mushroom')drawMushroom(x,y);else drawOak(x,y)}else if(mapKey==='desert'){if(t.type==='saguaro')drawSaguaro(x,y);else if(t.type==='prickly')drawPrickly(x,y);else drawCreosote(x,y)}else{if(t.type==='spruce')drawSpruce(x,y);else if(t.type==='willow')drawWillow(x,y);else drawBearberry(x,y)}if(t.level>1){ctx.fillStyle='#f5db69';ctx.font='bold 12px Courier New';ctx.textAlign='center';ctx.fillText('★'.repeat(t.level-1),x,y-30)}}
 function drawSunflower(x,y){ctx.fillStyle='#3e7d36';ctx.fillRect(x-3,y+7,6,20);ctx.fillStyle='#f4c941';for(let a=0;a<8;a++){const dx=Math.round(Math.cos(a*Math.PI/4)*10),dy=Math.round(Math.sin(a*Math.PI/4)*10);ctx.fillRect(x+dx-5,y+dy-5,10,10)}ctx.fillStyle='#6d4c28';ctx.fillRect(x-5,y-5,10,10)}function drawMushroom(x,y){ctx.fillStyle='#efe4d0';ctx.fillRect(x-6,y+3,12,18);ctx.fillStyle='#bb5cc4';ctx.fillRect(x-17,y-4,34,9);ctx.fillRect(x-12,y-10,24,7)}function drawOak(x,y){ctx.fillStyle='#674326';ctx.fillRect(x-6,y+3,12,27);ctx.fillStyle='#3d7137';ctx.fillRect(x-21,y-10,42,25);ctx.fillRect(x-14,y-20,28,15)}function drawSaguaro(x,y){ctx.fillStyle='#3f7d45';ctx.fillRect(x-5,y-20,10,45);ctx.fillRect(x-17,y-8,12,8);ctx.fillRect(x+5,y-1,12,8)}function drawPrickly(x,y){ctx.fillStyle='#4d8750';ctx.fillRect(x-16,y-4,32,18);ctx.fillRect(x-8,y-13,16,11);ctx.fillStyle='#e9a1a1';ctx.fillRect(x-10,y-9,4,4);ctx.fillRect(x+5,y+1,4,4)}function drawCreosote(x,y){ctx.fillStyle='#6c773d';ctx.fillRect(x-3,y-2,6,28);ctx.fillRect(x-20,y-2,40,5);ctx.fillRect(x-14,y-12,5,12);ctx.fillRect(x+9,y-15,5,15);ctx.fillStyle='#b6a75b';ctx.fillRect(x-13,y-18,9,7);ctx.fillRect(x+7,y-21,9,7)}function drawSpruce(x,y){ctx.fillStyle='#6b5137';ctx.fillRect(x-4,y+5,8,25);ctx.fillStyle='#3f765d';for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(x,y-24+i*10);ctx.lineTo(x-18+i*3,y+5+i*7);ctx.lineTo(x+18-i*3,y+5+i*7);ctx.fill()}}function drawWillow(x,y){ctx.fillStyle='#6c563f';ctx.fillRect(x-3,y-3,6,30);ctx.fillStyle='#9bb77d';for(let i=-2;i<=2;i++)ctx.fillRect(x+i*7-3,y-17+Math.abs(i)*3,6,20)}function drawBearberry(x,y){ctx.fillStyle='#5b744c';ctx.fillRect(x-17,y+4,34,6);ctx.fillRect(x-10,y-5,20,9);ctx.fillStyle='#b94f67';ctx.fillRect(x-12,y-11,7,7);ctx.fillRect(x+5,y-5,7,7);ctx.fillRect(x-2,y+2,7,7)}function drawRock(r){ctx.fillStyle=mapKey==='snow'?'#7f8e91':mapKey==='desert'?'#79684f':'#4f5a45';ctx.fillRect(r.x-r.r+4,r.y-r.r+8,r.r*2-8,r.r*2-8);ctx.fillStyle=mapKey==='snow'?'#aebdc0':mapKey==='desert'?'#9a815f':'#68735a';ctx.fillRect(r.x-r.r+10,r.y-r.r+3,r.r+10,r.r-4)}function drawEnemy(e){ctx.fillStyle=e.fast?'#d86b3f':'#563f2b';ctx.fillRect(e.x-9,e.y-7,18,14);ctx.fillStyle=e.fast?'#f1a15e':'#8d693e';ctx.fillRect(e.x-6,e.y-10,12,6);ctx.fillStyle='#e7f0bd';ctx.fillRect(e.x-6,e.y-3,4,4);ctx.fillRect(e.x+2,e.y-3,4,4);ctx.fillStyle='#2d2118';ctx.fillRect(e.x-12,e.y-17,24,3);ctx.fillStyle='#e36d5d';ctx.fillRect(e.x-12,e.y-17,24*Math.max(0,e.hp/e.maxHp),3)}
 function loop(){for(let i=0;i<gameSpeed;i++)tick();draw();requestAnimationFrame(loop)}
-chooseMap('forest');$('gameScreen').classList.add('hidden');$('mainMenu').classList.remove('hidden');loop();
+map=MAPS.forest;path=map.path;rocks=map.rocks;towerDefs=map.towers;gameSpeed=1;loop();
